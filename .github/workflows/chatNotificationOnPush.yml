@@ -1,0 +1,43 @@
+name: Google Chat Notification on Push
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - id: files
+        uses: jitterbit/get-changed-files@v1
+        with:
+          # Format of the steps output context.
+          # Can be 'space-delimited', 'csv', or 'json'.
+          # 
+          # Default: 'space-delimited'
+          format: 'json'
+      - name: Format Msg
+        uses: ./.github/actions/google-chat-notification-on-push/
+        with: 
+          branch-name: "${{github.ref_name}}"
+          event: "${{toJSON(github.event)}}"
+          steps: "${{toJSON(steps)}}"
+        id: modded
+      # - name: Dev Output
+      #   run: |
+      #     echo "${{github.event}}"
+      #     echo "${{steps.findandreplace.outputs.replaced}}"
+      - name: Send Google Chat Notification
+        run: |
+          curl --location --request POST '${{ secrets.gchat_webhook }}' \
+          --header 'Content-Type: application/json' \
+          -d ${{steps.modded.outputs.chat-msg}}
+  e2e-tests:
+    runs-on: ubuntu-latest # or macos-latest, windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: microsoft/playwright-github-action@v1
+      - name: Install dependencies and run tests
+        run: npm install && npm test
