@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class Controller {
-
+	// test comment
 	@RequestMapping("home")
 	public String welcome() {
 		return "Welcome to Spring World.";
